@@ -1,0 +1,10 @@
+#Import Library
+from sklearn.cluster import KMeans
+#Assumed you have, X for training data set
+#and x_test of test_dataset
+#Create KNeighbors classifier object model
+k_means = KMeans(n_clusters=3, random_state=0)
+#Train the model using the training sets and check score
+k_means.fit(X)
+#predict output
+predicted = k_means.predict(X)#X or x_test
