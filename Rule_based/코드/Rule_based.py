@@ -14,26 +14,36 @@ else :
 
 choose = ''
 
+#if No, we use this function
 def No():
   global choose
   choose = "N"
   print("No\n")
   time.sleep(1)
-    
+
+#if Yes, we use this function    
 def Yes():
   global choose
   choose = "Y"
   print("Yes\n")
   time.sleep(1)
 
-def Oversampling():
+#oversampling(<10%)
+def Oversampling(x_train, y_train):
   from sklearn.datasets import make_classification
   from sklearn.decomposition import PCA
   from imblearn.over_sampling import SMOTE
   # 모델설정
   sm = SMOTE(ratio='auto', kind='regular')
-  x_train, y_test = sm.fit_sample(x_train,list(y_train))
+  global x_train, y_train = sm.fit_sample(x_train,list(y_train))
 
+#onehotencoding
+def OnehotEncoding():  
+  dataset = pd.get_dummies(dataset)
+
+#missing value
+def fill():
+  
 print("Start")
 time.sleep(1)
 
