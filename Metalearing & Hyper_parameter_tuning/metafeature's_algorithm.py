@@ -9,7 +9,7 @@ import warnings
  
 warnings.filterwarnings("ignore")
 
-df = pd.read_csv("../Dataset/heart_target.csv")
+df = pd.read_csv("../Dataset/titanic_Survived.csv")
 X = df.iloc[:, :-1]
 y = df.iloc[:, -1]
 meta_data = []
@@ -236,9 +236,8 @@ for i in range(0, df.shape[0]):
 
 max_cos_val = max(cos_sim_arr)
 max_cos_idx = cos_sim_arr[cos_sim_arr.index(max(cos_sim_arr))][1]
-print(max_cos_val)
+print(max_cos_val[0])
 print(max_cos_idx)
-print(cos_sim_arr)
 
 
 

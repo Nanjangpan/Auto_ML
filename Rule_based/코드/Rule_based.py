@@ -3,7 +3,10 @@ import time
 import csv
 import numpy as np
 import pandas as pd
-#import libraries
+import warnings
+ 
+warnings.filterwarnings("ignore")
+
 
 
 #import candidate models
@@ -15,14 +18,124 @@ from sklearn.naive_bayes import MultinomialNB
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import GradientBoostingClassifier, GradientBoostingRegressor
 from sklearn.tree import DecisionTreeClassifier
-from xgboost import XGBRegressor, XGBClassifier
+#from xgboost import XGBRegressor, XGBClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import cross_val_score
 from sklearn.metrics import f1_score
 from sklearn.metrics import mean_squared_error
+from imblearn.over_sampling import RandomOverSampler
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import accuracy_score, f1_score
+from missingpy import MissForest
+from math import sqrt
 
 
-dataset = pd.read_csv('./data/housePrice_SalePrice.csv', engine='python')
+
+
+#preprocess
+#-----------------------------------------------------------------------------------------------------------------------
+def preprocess4ensemble(df):
+    print("preprocess4ensemble")
+    X = df.iloc[:, :-1]
+    y = df.iloc[:, -1]
+    X_num = X.select_dtypes(include="number")
+    X_cat = X.select_dtypes(include="object")
+
+    #Check if all right
+    if not(X_num.shape[1]+X_cat.shape[1] == X.shape[1]) or not(X_num.shape[0] == X_cat.shape[0] and  X_cat.shape[0] == X.shape[0]):
+        print("categorical and numerical seperation operation has a problem")
+
+    for cat_col in X_cat.columns:
+        X_cat = pd.concat([X_cat,pd.get_dummies(X_cat[cat_col],dummy_na=False)],axis=1)
+        del X_cat[cat_col]
+
+    imputer = MissForest()
+    X_imputed = pd.DataFrame(imputer.fit_transform(X_num))
+    X_imputed.columns = X_num.columns
+    del X_num
+
+    X = pd.concat([X_imputed,X_cat],axis=1)
+    ros = RandomOverSampler(random_state=42)
+    X_res, y_res = ros.fit_resample(X, y)
+    return X_res, y_res
+
+def preprocess4xgb(df):
+    print("preprocess4xgb")
+    X = df.iloc[:, :-1]
+    y = df.iloc[:, -1]
+    X_num = X.select_dtypes(include="number")
+    X_cat = X.select_dtypes(include="object")
+
+    #Check if all right
+    if not(X_num.shape[1]+X_cat.shape[1] == X.shape[1]) or not(X_num.shape[0] == X_cat.shape[0] and  X_cat.shape[0] == X.shape[0]):
+        print("categorical and numerical seperation operation has a problem")
+
+    for cat_col in X_cat.columns:
+        X_cat = pd.concat([X_cat,pd.get_dummies(X_cat[cat_col],dummy_na=False)],axis=1)
+        del X_cat[cat_col]
+
+#     imputer = MissForest()
+#     X_imputed = pd.DataFrame(imputer.fit_transform(X_num))
+#     X_imputed.columns = X_num.columns
+#     del X_num
+    def oversampling(X_train,y_train):
+        rus = RandomOverSampler(return_indices=True)
+        X_resampled, y_resampled, idx_resampled = rus.fit_resample(X_train, y_train)
+        X_resampled = pd.DataFrame(X_resampled)
+        y_resampled = pd.Series(y_resampled)
+        X_resampled.columns = X_train.columns
+        return X_resampled,y_resampled
+    
+    X = pd.concat([X_imputed,X_cat],axis=1)
+    print(type(X))
+    ros = RandomOverSampler(random_state=42)
+    X, y = X.fillna(10000000000), y
+    X, y = oversampling(X, y)
+    X, y = X.replace(10000000000, np.nan), y.replace(10000000000, np.nan)
+    
+    return X, y
+
+def preprocess4normal(df):
+    print("preprocess4normal")
+    X = df.iloc[:, :-1]
+    y = df.iloc[:, -1]
+    X_num = X.select_dtypes(include="number")
+    X_cat = X.select_dtypes(include="object")
+
+    #Check if all right
+    if not(X_num.shape[1]+X_cat.shape[1] == X.shape[1]) or not(X_num.shape[0] == X_cat.shape[0] and  X_cat.shape[0] == X.shape[0]):
+        print("categorical and numerical seperation operation has a problem")
+
+    for cat_col in X_cat.columns:
+        X_cat = pd.concat([X_cat,pd.get_dummies(X_cat[cat_col],dummy_na=False)],axis=1)
+        del X_cat[cat_col]
+
+    #Impute nan
+    imputer = MissForest()
+    X_imputed = pd.DataFrame(imputer.fit_transform(X_num))
+    X_imputed.columns = X_num.columns
+    del X_num
+    
+    #Scaling
+    scaled_features = StandardScaler().fit_transform(X_imputed.values)
+    scaled_features_df = pd.DataFrame(scaled_features, index=X_imputed.index, columns=X_imputed.columns)
+
+    X = pd.concat([scaled_features_df,X_cat],axis=1)
+    ros = RandomOverSampler(random_state=42)
+    X_res, y_res = ros.fit_resample(X, y)
+    return X_res, y_res
+
+def preprocess(df,algo_type):
+    if "RandomForest" in str(algo_type).split("(")[0] or "GradientBoosting" in str(algo_type).split("(")[0]:
+        return preprocess4ensemble(df)
+    elif "XGB" in str(algo_type).split("(")[0]:
+        return preprocess4xgb(df)
+    else:
+        return preprocess4normal(df)
+      
+#-----------------------------------------------------------------------------------------------------------------------
+      
+dataset = pd.read_csv("../Dataset/housePrice_SalePrice.csv")
 data_size = dataset.shape[0]
 a = dataset.iloc[:, -1][1]
 if(issubclass(type(a), str)): #check predict data is stirng
@@ -36,31 +149,19 @@ choose = ''
 def No():
   global choose
   choose = "N"
-  print("No\n")
+  print("No")
   time.sleep(1)
 
 #if Yes, we use this function    
 def Yes():
   global choose
   choose = "Y"
-  print("Yes\n")
+  print("Yes")
   time.sleep(1)
 
-from sklearn.datasets import make_classification
-from sklearn.preprocessing import StandardScaler
 
-dataset = pd.get_dummies(dataset)
-#MICE = MiceImputer()
-#dataset = MICE.fit(dataset).transform(dataset)
-x = dataset.iloc[:, :-1]
-y = dataset.iloc[:, -1]
-x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.3)
-
-scaler = StandardScaler()
-x_train = scaler.fit_transform(x_train)
-
-
-
+#-----------------------------------------------------------------------------------------------------------------------
+  
 print("Start")
 time.sleep(1)
 
@@ -128,11 +229,18 @@ elif choose == "Y":
                 print("----------------------------------------------------------")
                 print("SGD Regressor")
                 print("----------------------------------------------------------")
-                algo_type = SGDRegressor() 
-                task_type = 'reg'                  
-                sgd = TPE(dataset,"target",task_type,algo_type)
+                sgd = SGDRegressor()
+                result = preprocess(dataset, sgd)
+                x = pd.DataFrame(result[0])
+                y = pd.DataFrame(result[1])
+                x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.3)
                 sgd.fit(x_train, y_train)
-                predicted = sgd.predict(x_test)#X or x_test
+                predicted = sgd.predict(x_test)
+                mse=mean_squared_error(y_test, predicted)
+                rmse=sqrt(mse)
+                print("rmse: %.2f" %rmse)
+                #print("Accuracy: %.2f" %accuracy_score(y_test, predicted))
+                #print("F1 score: %.2f" %f1_score(y_test, predicted))
                 result = pd.DataFrame(predicted)
                 result.to_csv('./result/SGD_Regressor_result.csv', index=False, header=True)
                 
@@ -144,19 +252,64 @@ elif choose == "Y":
                     print("----------------------------------------------------------")
                     #print("RidgeRegression")
                     print("Linear SVR")
-                    print("----------------------------------------------------------")
-                    lin_svr = LinearSVR() 
+                    print("----------------------------------------------------------")          
+                    lin_svr = LinearSVR (
+                                epsilon=0,
+                                tol=0.0001,
+                                C=1,
+                                fit_intercept=True,
+                                intercept_scaling=1,
+                                dual=True,
+                                verbose=0,
+                                random_state=None,
+                                max_iter=1000
+                    )
+                    result = preprocess(dataset, lin_svr)
+                    x = pd.DataFrame(result[0])
+                    y = pd.DataFrame(result[1])
+                    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.3)
                     lin_svr.fit(x_train, y_train)
-                    predicted = lin_svr.predict(x_test)#X or x_test
+                    predicted = lin_svr.predict(x_test)
+                    mse=mean_squared_error(y_test, predicted)
+                    rmse=sqrt(mse)
+                    print("rmse: %.2f" %rmse)
                     result = pd.DataFrame(predicted)
                     result.to_csv('./result/LinearSVR_result.csv', index=False, header=True)
                     print("")
                     choose = input("If it doesn't work, press Y. ")
                     if choose == "Y":
                         print("----------------------------------------------------------")
-                        print("SVR(kernel=\'rbf\')") #SVR default
+                        #print("SVR(kernel=\'rbf\')") #SVR default
                         print("EnsembleRegressors")
                         print("----------------------------------------------------------")
+                        clf = RandomForestRegressor(
+                                  bootstrap = False,
+                                  max_depth = None,
+                                  max_features= 'sqrt',
+                                  max_leaf_nodes = None,
+                                  min_impurity_decrease = 0.0,
+                                  min_impurity_split = None,
+                                  min_samples_leaf = 1,
+                                  min_samples_split = 2,
+                                  min_weight_fraction_leaf = 0.0,
+                                  n_estimators = 1500,
+                                  n_jobs = 1,
+                                  oob_score = False,
+                                  random_state = 42,
+                                  verbose = 0,
+                                  warm_start = False) 
+                        result = preprocess(dataset, clf)
+                        x = pd.DataFrame(result[0])
+                        y = pd.DataFrame(result[1])
+                        x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.3)
+                        clf.fit(x_train, y_train)
+                        predicted = clf.predict(x_test)
+                        mse=mean_squared_error(y_test, predicted)
+                        rmse=sqrt(mse)
+                        print("rmse: %.2f" %rmse)
+                        result = pd.DataFrame(predicted)
+                        result.to_csv('./result/clf_result.csv', index=False, header=True)
+                        print("")
                 elif choose =="Y":
                     print("----------------------------------------------------------")
                     print("Lasso")
@@ -201,17 +354,7 @@ elif choose == "Y":
                     print("----------------------------------------------------------")
                     print("KMeans")
                     print("----------------------------------------------------------")
-                    '''
-                    f = open("./result/Kmeans.py", "w")
-                    code = "#Import Library\nfrom sklearn.cluster import KMeans\n#Assumed you have, X for training data set\n#and x_test of test_dataset\n#Create KNeighbors classifier object model\nk_means = KMeans(n_clusters=3, random_state=0)\n#Train the model using the training sets and check score\nk_means.fit(X)\n#predict output\npredicted = k_means.predict(X)#X or x_test"
-                    f.write(code)
-                    f.close()
-                    f = open("./result/Kmeans.txt", "w")
-                    code = "#Import Library\nfrom sklearn.cluster import KMeans\n#Assumed you have, X for training data set\n#and x_test of test_dataset\n#Create KNeighbors classifier object model\nk_means = KMeans(n_clusters=3, random_state=0)\n#Train the model using the training sets and check score\nk_means.fit(X)\n#predict output\npredicted = k_means.predict(X)#X or x_test"
-                    f.write(code)
-                    f.close()
-                    print("")
-                    '''
+
                     from sklearn.cluster import KMeans
                     X = dataset.copy()
                     k_means = KMeans(n_clusters=3, random_state=0)
