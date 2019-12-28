@@ -28,6 +28,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score, f1_score
 from missingpy import MissForest
 from math import sqrt
+from sklearn.neighbors import KNeighborsClassifier
 
 
 
@@ -135,7 +136,7 @@ def preprocess(df,algo_type):
       
 #-----------------------------------------------------------------------------------------------------------------------
       
-dataset = pd.read_csv("../Dataset/housePrice_SalePrice.csv")
+dataset = pd.read_csv("./data/heart_target.csv")
 data_size = dataset.shape[0]
 a = dataset.iloc[:, -1][1]
 if(issubclass(type(a), str)): #check predict data is stirng
@@ -392,6 +393,18 @@ elif choose == "Y":
                 print("----------------------------------------------------------")
                 print("Linear SVC")
                 print("----------------------------------------------------------")
+                linear_svc = LinearSVC(random_state=0, tol=1e-5)
+                result = preprocess(dataset, linear_svc)
+                x = pd.DataFrame(result[0])
+                y = pd.DataFrame(result[1])
+                x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.3)
+                linear_svc.fit(x_train, y_train)
+                predicted = linear_svc.predict(x_test)
+                
+                print("Accuracy: %.2f" %accuracy_score(y_test, predicted))
+                print("F1 score: %.2f" %f1_score(y_test, predicted))
+                result = pd.DataFrame(predicted)
+                result.to_csv('./result/linear_svc_result.csv', index=False, header=True)
                 print("")
                 choose = input("If it doesn't work, press Y. ")
                 if choose == "Y":
@@ -405,13 +418,53 @@ elif choose == "Y":
                         print("----------------------------------------------------------")
                         print("KNeighbors Classifier")
                         print("----------------------------------------------------------")
+                        n_neighbors = (len(set(dataset.iloc[:, -1])))
+                        classifier = KNeighborsClassifier(n_neighbors=n_neighbors)
+                        result = preprocess(dataset, classifier)
+                        x = pd.DataFrame(result[0])
+                        y = pd.DataFrame(result[1])
+                        x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.3)
+                        classifier.fit(x_train, y_train)
+                        predicted = classifier.predict(x_test)
+                        
+                        print("Accuracy: %.2f" %accuracy_score(y_test, predicted))
+                        print("F1 score: %.2f" %f1_score(y_test, predicted))
+                        result = pd.DataFrame(predicted)
+                        result.to_csv('./result/knn_result.csv', index=False, header=True)
                         print("")
                         choose = input("If it doesn't work, press Y. ")
                         if choose == "Y":
                             print("----------------------------------------------------------")
-                            print("SVC")
+                            #print("SVC")
                             print("Ensemble Classifiers")
                             print("----------------------------------------------------------")
+                            rnd_clf = RandomForestClassifier(
+                                          bootstrap = False,
+                                          max_depth = None,
+                                          max_features= 'sqrt',
+                                          max_leaf_nodes = None,
+                                          min_impurity_decrease = 0.0,
+                                          min_impurity_split = None,
+                                          min_samples_leaf = 1,
+                                          min_samples_split = 2,
+                                          min_weight_fraction_leaf = 0.0,
+                                          n_estimators = 1000,
+                                          n_jobs = 1,
+                                          oob_score = False,
+                                          random_state = 42,
+                                          verbose = 0,
+                                          warm_start = False)
+                            result = preprocess(dataset, rnd_clf)
+                            x = pd.DataFrame(result[0])
+                            y = pd.DataFrame(result[1])
+                            x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.3)
+                            rnd_clf.fit(x_train, y_train)
+                            predicted = rnd_clf.predict(x_test)
+                            
+                            print("Accuracy: %.2f" %accuracy_score(y_test, predicted))
+                            print("F1 score: %.2f" %f1_score(y_test, predicted))
+                            result = pd.DataFrame(predicted)
+                            result.to_csv('./result/rnd_clf_result.csv', index=False, header=True)
                     elif choose == "Y":
                         print("----------------------------------------------------------")
                         print("Naive Bayes")
