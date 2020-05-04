@@ -9,7 +9,7 @@ import warnings
  
 warnings.filterwarnings("ignore")
 
-df = pd.read_csv("../Dataset/titanic_Survived.csv")
+df = pd.read_csv("../Dataset/Iris_Species.csv")
 def get_most_similar_data_id(df):
     X = df.iloc[:, :-1]
     y = df.iloc[:, -1]

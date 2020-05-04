@@ -136,7 +136,7 @@ def preprocess(df,algo_type):
       
 #-----------------------------------------------------------------------------------------------------------------------
       
-dataset = pd.read_csv("./data/heart_target.csv")
+dataset = pd.read_csv("./data/Iris_Species.csv")
 data_size = dataset.shape[0]
 a = dataset.iloc[:, -1][1]
 if(issubclass(type(a), str)): #check predict data is stirng
