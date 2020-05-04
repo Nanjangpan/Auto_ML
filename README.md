@@ -25,7 +25,7 @@ Meta Learning 기반으로 Auto ML을 구현하였습니다. <br>
 &emsp;<img width="551" alt="data-preprocessing" src="https://user-images.githubusercontent.com/50066454/80968559-23117d80-8e53-11ea-9e36-eca94785cf19.png"></img>
 * Bayesian optimizer
   * 목표 : Model 별 최적의 hyper-parameter 선정
-  * TPE 사용
+  * Surrogate Model : TPE 사용
   * Meta Learning 단계에서 선별 된 5가지 Model 별 최적의 hyper-parameter 선정
  
 ## 프로젝트 결과
