@@ -29,7 +29,7 @@ Meta Learning 기반으로 Auto ML을 구현하였습니다.
   * Meta Learning 단계에서 선별 된 5가지 Model 별 최적의 hyper-parameter 선정
  
 ## 프로젝트 결과
-Heart Disease Prediciton Classification([dataset](https://www.kaggle.com/ronitf/heart-disease-uci)
+Heart Disease Prediciton Classification([Dataset](https://www.kaggle.com/ronitf/heart-disease-uci))
 * Rule based
   * Accuracy : 0.85
   * F1 score : 0.84
