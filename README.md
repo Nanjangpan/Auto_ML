@@ -10,10 +10,10 @@ Scikit learn에서 제공해준 [Machine learning map](https://scikit-learn.org/
 
 
 ## Meta Learning based Auto ML
-Meta Learning 기반으로 Auto ML을 구현하였습니다.
+Meta Learning 기반으로 Auto ML을 구현하였습니다. <br>
 
 
-* Meta Learning based Auto ML Pipeline
+* Meta Learning based Auto ML Pipeline <br>
 <img width="551" alt="data-preprocessing" src="https://user-images.githubusercontent.com/50066454/80968559-23117d80-8e53-11ea-9e36-eca94785cf19.png"></img>
 
 * Meta Learning
