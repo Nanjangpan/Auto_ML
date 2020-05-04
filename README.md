@@ -2,7 +2,7 @@
 Rule based Auto ML 과 Meta Learning based Auto ML 두가지를 구현해보는 프로젝트
 <br>
 ## Rule based Auto ML
-Scikit learn에서 제공해준 [Machine learning map](https://scikit-learn.org/stable/tutorial/machine_learning_map/index.html)기반으로 구현하였습니다. 
+Scikit learn에서 제공해준 [Machine learning cheat sheet](https://scikit-learn.org/stable/tutorial/machine_learning_map/index.html)기반으로 구현하였습니다. 
 
 
 * Rule based Auto ML Pipeline
